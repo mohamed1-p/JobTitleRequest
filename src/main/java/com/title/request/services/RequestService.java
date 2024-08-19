@@ -1,5 +1,6 @@
 package com.title.request.services;
 
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import com.title.request.DTO.ShowRequestDto;
 import com.title.request.models.Request;
 import com.title.request.models.RequestStatus;
 import com.title.request.models.UserEntity;
+import com.title.request.repository.AttachmentRepository;
 import com.title.request.repository.HeadDepartmentRepository;
 import com.title.request.repository.ManagerRepository;
 import com.title.request.repository.RequestRepository;
@@ -35,13 +37,15 @@ public class RequestService {
     private final UnitHeadRepository unitHeadRepository;
     private final RequestStatusRepository statusRepository;
     private final UserRepository userRepository;
+    private final AttachmentRepository attachmentRepository;
     
     @Autowired
     public RequestService(RequestRepository requestRepository,
     		SupervisorRepository supervisorRepository ,UserRepository userRepository,
     		ManagerRepository managerRepository,
     		HeadDepartmentRepository headDepartmentRepository,
-    		RequestStatusRepository statusRepository,UnitHeadRepository unitHeadRepository) {
+    		RequestStatusRepository statusRepository,
+    		AttachmentRepository attachmentRepository,UnitHeadRepository unitHeadRepository) {
         
     	this.requestRepository = requestRepository;
         this.managerRepository=managerRepository;
@@ -50,6 +54,7 @@ public class RequestService {
         this.unitHeadRepository=unitHeadRepository;
         this.statusRepository=statusRepository;
         this.userRepository=userRepository;
+        this.attachmentRepository=attachmentRepository;
     }
     
     public List<ShowRequestDto> getAllRequests(){
@@ -61,7 +66,7 @@ public class RequestService {
     		ShowRequestDto tempRequesDto= new ShowRequestDto();
     		tempRequesDto.setRequestId(request.getId());
     		tempRequesDto.setFullName(request.getFullName());
-    		tempRequesDto.setStatus(request.getRequestStatus().getStatusId());
+    		tempRequesDto.setStatus(request.getRequestStatus().getStatusName());
     		tempRequesDto.setDepartment(request.getHeadDepartment().getName());
     		tempRequesDto.setSupervisor(request.getSupervisor().getName());
     		
@@ -73,38 +78,76 @@ public class RequestService {
     
     
     public RequestDTO createRequest(RequestDTO requestDto) {
-    	System.out.println("in create request");
+    	
     	Request mappedRequest = mapToRequest(requestDto);
     	
-    	//get the creator from the login session
-    	System.out.println("fetching creator");
+    	
+    	
     	
     	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("auth "+authentication);
+        
     	String username = authentication.getName();
-    	System.out.println("username "+ username);
+    	
         UserEntity creator = userRepository.findByUsername(username).
         		orElseThrow(() -> new UsernameNotFoundException("User not found"));
         
-    	System.out.println("createo "+creator.getName());
+    	
     	mappedRequest.setCreator(creator);
-    	// add the attachment
+    	
     	mappedRequest.setRequestDate(LocalDateTime.now());
-    	System.out.println("fetching status and setting it ");
     	mappedRequest.setRequestStatus(statusRepository.findById(0).orElseThrow());
     	
         requestRepository.save(mappedRequest);
+        mappedRequest.setAttachments(attachmentRepository.findByRequest(mappedRequest));
+        return requestDto;
+    }
+
+    
+    
+    public List<ShowRequestDto> findByCreator(Long creatorId) {
+    	UserEntity creator = userRepository.findById(creatorId).
+    			orElseThrow(()-> new RuntimeException("No user exist by this id"));
+         
+        List<ShowRequestDto> requestDto = new ArrayList<>();
+        List<Request> requests = new ArrayList<>();
+        requests = requestRepository.findByCreator(creator);
+        for(Request request:requests){
+       	 ShowRequestDto dto = new ShowRequestDto();
+       	 dto.setRequestId(request.getId());
+       	 dto.setFullName(request.getFullName());
+       	 dto.setStatus(request.getRequestStatus().getStatusName());
+       	 dto.setDepartment(request.getHeadDepartment().getName());
+       	 dto.setSupervisor(request.getSupervisor().getName());
+       	 
+       	 requestDto.add(dto);
+        }
+        
+        
+        return requestDto;
+    }
+    
+    
+
+    public List<ShowRequestDto> findByStatus(int status) {
+    	RequestStatus requestStatus = statusRepository.findById(status).orElseThrow();
+    	
+    	List<ShowRequestDto> requestDto = new ArrayList<>();
+         List<Request> requests = new ArrayList<>();
+         requests = requestRepository.findByRequestStatus(requestStatus);
+         
+         for(Request request:requests){
+        	 ShowRequestDto dto = new ShowRequestDto();
+        	 dto.setRequestId(request.getId());
+        	 dto.setFullName(request.getFullName());
+        	 dto.setStatus(request.getRequestStatus().getStatusName());
+        	 dto.setDepartment(request.getHeadDepartment().getName());
+        	 dto.setSupervisor(request.getSupervisor().getName());
+        	 
+        	 requestDto.add(dto);
+         }
+         
          
          return requestDto;
-    }
-
-    public List<Request> findByCreator(UserEntity creator) {
-        return requestRepository.findByCreator(creator);
-    }
-
-    public List<Request> findByStatus(int status) {
-    	RequestStatus requestStatus = statusRepository.findById(status).orElseThrow();
-        return requestRepository.findByRequestStatus(requestStatus);
     }
 
     public List<ShowRequestDto> findByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
@@ -117,7 +160,7 @@ public class RequestService {
      		ShowRequestDto tempRequesDto= new ShowRequestDto();
      		tempRequesDto.setRequestId(request.getId());
      		tempRequesDto.setFullName(request.getFullName());
-     		tempRequesDto.setStatus(request.getRequestStatus().getStatusId());
+     		tempRequesDto.setStatus(request.getRequestStatus().getStatusName());
      		tempRequesDto.setDepartment(request.getHeadDepartment().getName());
      		tempRequesDto.setSupervisor(request.getSupervisor().getName());
      		
@@ -127,24 +170,35 @@ public class RequestService {
     }
 
     @Transactional
-    public Request updateRequestStatus(Long requestId, int status, String comments) {
-    	//change the exception to a global exception
+    public ShowRequestDto updateRequestStatus(Long requestId, int status, String comments) {
+    	
+    	ShowRequestDto requestDto = new ShowRequestDto();
+    	
         Request request = requestRepository.findById(requestId)
             .orElseThrow(() -> new RuntimeException("Request not found"));
+        
         RequestStatus state = statusRepository.findById(status).
         		orElseThrow(() -> new RuntimeException("State not found"));
-        // set the user_admin who updated the request from the session login
-        
+ 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         UserEntity admin = userRepository.findByUsername(username).
         		orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        request.setUserAdmin(admin);
         
+        request.setUserAdmin(admin);
         request.setRequestStatus(state);;
         request.setComments(comments);
         request.setActionDate(LocalDateTime.now());
-        return requestRepository.save(request);
+
+        requestRepository.save(request);
+        
+        requestDto.setRequestId(request.getId());
+        requestDto.setFullName(request.getFullName());
+        requestDto.setStatus(request.getRequestStatus().getStatusName());
+        requestDto.setDepartment(request.getHeadDepartment().getName());
+        requestDto.setSupervisor(request.getSupervisor().getName());
+ 		
+        return requestDto;
     }
     
     
@@ -156,17 +210,11 @@ public class RequestService {
     private Request mapToRequest(RequestDTO requestDto) {
     	Request mappedRequest = new Request();
     	
-    	System.out.println("in map to request");
     	mappedRequest.setManager(managerRepository.findByCode(requestDto.getManagerCode()));
-    	System.out.println("manager "+mappedRequest.getManager());
     	mappedRequest.setSupervisor(supervisorRepository.findByCode(requestDto.getSupervisorCode()));
-    	System.out.println("superviser "+mappedRequest.getSupervisor());
     	mappedRequest.setHeadDepartment(headDepartmentRepository.findByCode(requestDto.getHeadDepartmentCode()));
-    	System.out.println("dep "+mappedRequest.getHeadDepartment());
     	mappedRequest.setUnitHead(unitHeadRepository.findByCode(requestDto.getUnitHeadCode()));
-    	System.out.println("head "+mappedRequest.getUnitHead());
     	mappedRequest.setFullName(requestDto.getFullName());
-    	System.out.println("name "+mappedRequest.getFullName());
     	
     	return mappedRequest;
     }

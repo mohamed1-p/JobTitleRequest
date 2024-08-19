@@ -8,7 +8,6 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -19,35 +18,46 @@ public class SecurityConfig{
 	
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
-		http.authorizeHttpRequests(configurer ->
-		configurer
-				.requestMatchers(HttpMethod.DELETE,"/api/requests/**").
-				hasRole("ADMIN"));
-		
-		http.authorizeHttpRequests(configurer ->
-		configurer
-				.requestMatchers(HttpMethod.PUT,"/api/requests/**").
-				hasRole("ADMIN"));
-		
+		http.authorizeHttpRequests(configurer -> {
+	        // Restrict DELETE requests to /api/requests/** to ADMIN role
+	        configurer
+	            .requestMatchers(HttpMethod.DELETE, "/api/requests/**")
+	            .hasAuthority("ADMIN");
 
-		http.authorizeHttpRequests(configurer ->
-		configurer
-				.requestMatchers(HttpMethod.GET,"/api/requests/**")
-				.permitAll());
-		
-		http.authorizeHttpRequests(configurer ->
-		configurer
-				.requestMatchers(HttpMethod.POST,"/api/requests/**")
-				.authenticated());
+	        // Restrict PUT requests to /api/requests/** to ADMIN role
+	        configurer
+	            .requestMatchers(HttpMethod.PUT, "/api/requests/**")
+	            .hasAuthority("ADMIN");
 
-		http.authorizeHttpRequests(configurer-> configurer.requestMatchers(
-				HttpMethod.POST,"api/user/**").permitAll());
-		
-		http.authorizeHttpRequests(configurer-> configurer.requestMatchers(
-				HttpMethod.POST,"api/attachments/**").authenticated());
-		
-		http.authorizeHttpRequests(configurer-> configurer.requestMatchers(
-				HttpMethod.GET,"api/attachments/**").authenticated());
+	        // Allow all GET requests to /api/requests/** without authentication
+	        configurer
+	            .requestMatchers(HttpMethod.GET, "/api/requests/**")
+	            .permitAll();
+
+	        // Require authentication for POST requests to /api/requests/**
+	        configurer
+	            .requestMatchers(HttpMethod.POST, "/api/requests/**")
+	            .authenticated();
+
+	        // Allow all POST requests to /api/user/**
+	        configurer
+	            .requestMatchers(HttpMethod.POST, "api/user/**")
+	            .permitAll();
+
+	        // Require authentication for POST requests to /api/attachments/**
+	        configurer
+	            .requestMatchers(HttpMethod.POST, "api/attachments/**")
+	            .authenticated();
+
+	        // Require authentication for GET requests to /api/attachments/**
+	        configurer
+	            .requestMatchers(HttpMethod.GET, "api/attachments/**")
+	            .authenticated();
+	        
+	        configurer
+            .requestMatchers(HttpMethod.PUT, "api/user/**")
+            .permitAll();
+	    });
 		
 		http.httpBasic(Customizer.withDefaults());
 

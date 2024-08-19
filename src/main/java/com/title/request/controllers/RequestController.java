@@ -43,23 +43,21 @@ public class RequestController {
 	
 	@PostMapping("/create")
     public ResponseEntity<RequestDTO> createRequest(@RequestBody RequestDTO requestDto) {
-		System.out.println("in request controller");
         RequestDTO createdRequest = requestService.createRequest(requestDto);
-        System.out.println("after calling service");
         return ResponseEntity.ok(createdRequest);
     }
 	
-	//need adjustment for the params 
+	
 	@GetMapping("/creator")
-    public ResponseEntity<List<Request>> getRequestsByCreator(@RequestParam UserEntity creator) {
-        List<Request> requests = requestService.findByCreator(creator);
+    public ResponseEntity<List<ShowRequestDto>> getRequestsByCreator(@RequestParam Long creatorId) {
+        List<ShowRequestDto> requests = requestService.findByCreator(creatorId);
         return ResponseEntity.ok(requests);
     }
 	
-	//needs Dto to make the respnse more readable
+	
 	@GetMapping("/status")
-    public ResponseEntity<List<Request>> getRequestsByStatus(@RequestParam int status) {
-        List<Request> requests = requestService.findByStatus(status);
+    public ResponseEntity<List<ShowRequestDto>> getRequestsByStatus(@RequestParam int status) {
+        List<ShowRequestDto> requests = requestService.findByStatus(status);
         return ResponseEntity.ok(requests);
     }
 	
@@ -78,11 +76,11 @@ public class RequestController {
 	
 	
 	@PutMapping("/{requestId}/status")
-    public ResponseEntity<Request> updateRequestStatus(
+    public ResponseEntity<ShowRequestDto> updateRequestStatus(
             @PathVariable Long requestId,
             @RequestParam int status,
             @RequestBody String comments) {
-        Request updatedRequest = requestService.updateRequestStatus(requestId, status, comments);
+        ShowRequestDto updatedRequest = requestService.updateRequestStatus(requestId, status, comments);
         return ResponseEntity.ok(updatedRequest);
     }
 }

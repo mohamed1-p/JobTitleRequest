@@ -47,17 +47,31 @@ public class UserService implements UserDetailsService {
     	user.setPassword(passwordEncoder.encode(userDto.getPassword()));
     	
     	RoleEntity role = roleRepository.findByRole("EMPLOYEE").orElseThrow();
-    	System.out.println("role"+ role);
+    	
     	user.setRoles(Collections.singletonList(role));
-    	System.out.println("user"+user);
         userRepository.save(user);
         return true;
     }
 
-    public Optional<UserEntity> findById(Long id) {
-        return userRepository.findById(id);
-    }
+    
+    public Boolean changeUserRoleToAdmin(String username) {
+        UserEntity user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        System.out.println("the user "+user);
 
+        RoleEntity adminRole = roleRepository.findByRole("ADMIN")
+            .orElseThrow(() -> new IllegalArgumentException("Role not found"));
+        
+        System.out.println("the rule"+ adminRole);
+        //user.setRoles(Collections.singletonList(adminRole));
+        user.getRoles().add(adminRole);
+        System.out.println(user.getRoles());
+        userRepository.save(user);
+        return true;
+    }
+    
+    
+    
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		UserEntity user = userRepository.findByUsername(username).
@@ -66,6 +80,7 @@ public class UserService implements UserDetailsService {
 		return new User(user.getUsername(),user.getPassword(),
 				mapRolesToAutority(user.getRoles()));
 	}
+	
 	
 	
 	private Collection<GrantedAuthority> mapRolesToAutority(List<RoleEntity> roles){
