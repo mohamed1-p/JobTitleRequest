@@ -80,7 +80,9 @@ public class RequestService {
     	System.out.println("fetching creator");
     	
     	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+        System.out.println("auth "+authentication);
+    	String username = authentication.getName();
+    	System.out.println("username "+ username);
         UserEntity creator = userRepository.findByUsername(username).
         		orElseThrow(() -> new UsernameNotFoundException("User not found"));
         

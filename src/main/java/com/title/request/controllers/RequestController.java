@@ -43,7 +43,9 @@ public class RequestController {
 	
 	@PostMapping("/create")
     public ResponseEntity<RequestDTO> createRequest(@RequestBody RequestDTO requestDto) {
+		System.out.println("in request controller");
         RequestDTO createdRequest = requestService.createRequest(requestDto);
+        System.out.println("after calling service");
         return ResponseEntity.ok(createdRequest);
     }
 	

@@ -35,6 +35,9 @@ public class Attachment {
 
     @Column(name = "file_path", nullable = false)
     private String filePath;
+    
+    @Column(name = "file_name", nullable = false)
+    private String fileName;
 
     @Column(name = "upload_date", nullable = false)
     private LocalDateTime uploadDate;
