@@ -4,6 +4,7 @@ package com.title.request.services;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -61,39 +62,37 @@ public class RequestService {
         this.attachmentRepository=attachmentRepository;
     }
     
+    
+    /**
+     * 
+     * @param pageNo
+     * @param pageSize
+     * @return All the requests mapped to a DTO object
+     */
     public ResponsePage<ShowRequestDto> getAllRequests(int pageNo, int pageSize){
     	
     	//object to pass to the find all method
     	Pageable pageable = PageRequest.of(pageNo, pageSize);
-    	
     	Page<Request> requestsPage = requestRepository.findAll(pageable);
     	List<Request> requests = requestsPage.getContent();
-    	List<ShowRequestDto> requestDto = new ArrayList<>();
-    	ResponsePage<ShowRequestDto> content = new ResponsePage<>();
     	
-    	for(Request request : requests) {
-    		ShowRequestDto tempRequesDto= new ShowRequestDto();
-    		tempRequesDto.setRequestId(request.getId());
-    		tempRequesDto.setFullName(request.getFullName());
-    		tempRequesDto.setStatus(request.getRequestStatus().getStatusName());
-    		tempRequesDto.setDepartment(request.getHeadDepartment().getName());
-    		tempRequesDto.setSupervisor(request.getSupervisor().getName());
-    		
-    		requestDto.add(tempRequesDto);
-    	}
     	
-    	content.setContent(requestDto);
-    	content.setPage(requestsPage.getNumber());
-    	content.setSize(requestsPage.getSize());
-    	content.setTotalElements(requestsPage.getTotalElements());
-    	content.setTotalpages(requestsPage.getTotalPages());
-    	content.setLast(requestsPage.isLast());
-    	
-    	return content;
+    	 //map to DTO to make the response more readable
+     	List<ShowRequestDto> requestDto = requests.parallelStream()
+     		    .map(this::mapRequestToDto)
+     		    .collect(Collectors.toList());
+     	
+     	//set the pageable content to return it to the controller
+     	ResponsePage<ShowRequestDto> content = mapRequestToPageOject(requestsPage,requestDto);
+        return content;
     }
 
     
-    
+    /**
+     * 
+     * @param requestDto
+     * @return	return the created DTO object containing the data saved in the DataBase
+     */
     public RequestDTO createRequest(RequestDTO requestDto) {
     	
     	Request mappedRequest = mapToRequest(requestDto);
@@ -117,46 +116,46 @@ public class RequestService {
     }
 
     
-    
+    /**
+     * 
+     * @param creatorId
+     * @param pageNo
+     * @param pageSize
+     * @return	Return a list of Requests mapped to a DTO object where the Creator 
+     * 			of the Request is equal to creatorId
+     */
     public ResponsePage<ShowRequestDto> findByCreator(Long creatorId,int pageNo,int pageSize) {
     	
     	
-    	Pageable pageable = PageRequest.of(pageNo, pageSize);
+    	
     	
     	UserEntity creator = userRepository.findById(creatorId).
     			orElseThrow(()-> new RuntimeException("No user exist by this id"));
-         
-        List<ShowRequestDto> requestDto = new ArrayList<>();
         
+    	//handling the page object
+    	Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<Request> requestsPage = requestRepository.findByCreator(creator,pageable);
         List<Request> requests = requestsPage.getContent();
-        ResponsePage<ShowRequestDto> content = new ResponsePage<>();
         
-        //map the objects to DTO to make it more readable
-        for(Request request:requests){
-       	 ShowRequestDto dto = new ShowRequestDto();
-       	 dto.setRequestId(request.getId());
-       	 dto.setFullName(request.getFullName());
-       	 dto.setStatus(request.getRequestStatus().getStatusName());
-       	 dto.setDepartment(request.getHeadDepartment().getName());
-       	 dto.setSupervisor(request.getSupervisor().getName());
-       	 
-       	 requestDto.add(dto);
-        }
-        
-        //set the pageable content to return it to the controller
-        content.setContent(requestDto);
-    	content.setPage(requestsPage.getNumber());
-    	content.setSize(requestsPage.getSize());
-    	content.setTotalElements(requestsPage.getTotalElements());
-    	content.setTotalpages(requestsPage.getTotalPages());
-    	content.setLast(requestsPage.isLast());
-        
+        //map to DTO to make the response more readable
+     	List<ShowRequestDto> requestDto = requests.parallelStream()
+     		    .map(this::mapRequestToDto)
+     		    .collect(Collectors.toList());
+     	
+     	//set the pageable content to return it to the controller
+     	ResponsePage<ShowRequestDto> content = mapRequestToPageOject(requestsPage,requestDto);
         return content;
     }
     
     
-
+/**
+ * 
+ * @param status
+ * @param pageNo
+ * @param pageSize
+ * @return Return a list of Requests mapped to a DTO object where the Status 
+ * 		   of the Request is equal to status
+ */
     public ResponsePage<ShowRequestDto> findByStatus(int status, int pageNo,int pageSize) {
     	RequestStatus requestStatus = statusRepository.findById(status).orElseThrow();
     	
@@ -164,32 +163,28 @@ public class RequestService {
     	Pageable pageable = PageRequest.of(pageNo, pageSize);
     	Page<Request> requestsPage = requestRepository.findByRequestStatus(requestStatus,pageable);
         List<Request> requests = requestsPage.getContent();
-        ResponsePage<ShowRequestDto> content = new ResponsePage<>();
         
-        //map the object to dto
-    	List<ShowRequestDto> requestDto = new ArrayList<>();
-         for(Request request:requests){
-        	 ShowRequestDto dto = new ShowRequestDto();
-        	 dto.setRequestId(request.getId());
-        	 dto.setFullName(request.getFullName());
-        	 dto.setStatus(request.getRequestStatus().getStatusName());
-        	 dto.setDepartment(request.getHeadDepartment().getName());
-        	 dto.setSupervisor(request.getSupervisor().getName());
-        	 
-        	 requestDto.add(dto);
-         }
-         
-        //set the pageable content to return it to the controller
-        content.setContent(requestDto);
-     	content.setPage(requestsPage.getNumber());
-     	content.setSize(requestsPage.getSize());
-     	content.setTotalElements(requestsPage.getTotalElements());
-     	content.setTotalpages(requestsPage.getTotalPages());
-     	content.setLast(requestsPage.isLast());
-         
-         return content;
+        
+        //map to DTO to make the response more readable
+     	List<ShowRequestDto> requestDto = requests.parallelStream()
+     		    .map(this::mapRequestToDto)
+     		    .collect(Collectors.toList());
+     	
+     	//set the pageable content to return it to the controller
+     	ResponsePage<ShowRequestDto> content = mapRequestToPageOject(requestsPage,requestDto);
+        return content;
     }
 
+    
+    /**
+     * 
+     * @param startDate
+     * @param endDate
+     * @param pageNo
+     * @param pageSize
+     * @return Return a list of Requests mapped to a DTO object where the creation 
+     * 		   date of the Request is between  startDate and endDate
+     */
     public ResponsePage<ShowRequestDto> findByDateRange(LocalDateTime startDate, LocalDateTime endDate,
     		int pageNo,int pageSize) {
          
@@ -198,36 +193,28 @@ public class RequestService {
     	Pageable pageable = PageRequest.of(pageNo, pageSize);
     	Page<Request> requestsPage = requestRepository.findByRequestDateBetween(startDate, endDate,pageable);
         List<Request> requests = requestsPage.getContent();
-        ResponsePage<ShowRequestDto> content = new ResponsePage<>();
         
         
-     	List<ShowRequestDto> requestDto = new ArrayList<>();
-     	for(Request request : requests) {
-     		ShowRequestDto tempRequesDto= new ShowRequestDto();
-     		tempRequesDto.setRequestId(request.getId());
-     		tempRequesDto.setFullName(request.getFullName());
-     		tempRequesDto.setStatus(request.getRequestStatus().getStatusName());
-     		tempRequesDto.setDepartment(request.getHeadDepartment().getName());
-     		tempRequesDto.setSupervisor(request.getSupervisor().getName());
-     		
-     		requestDto.add(tempRequesDto);
-     	}
+        //map to DTO to make the response more readable
+     	List<ShowRequestDto> requestDto = requests.parallelStream()
+     		    .map(this::mapRequestToDto)
+     		    .collect(Collectors.toList());
      	
      	//set the pageable content to return it to the controller
-        content.setContent(requestDto);
-     	content.setPage(requestsPage.getNumber());
-     	content.setSize(requestsPage.getSize());
-     	content.setTotalElements(requestsPage.getTotalElements());
-     	content.setTotalpages(requestsPage.getTotalPages());
-     	content.setLast(requestsPage.isLast());
-         
-         return content;
+     	ResponsePage<ShowRequestDto> content = mapRequestToPageOject(requestsPage,requestDto);
+        return content;
     }
 
+    /**
+     * 
+     * @param requestId
+     * @param status
+     * @param comments
+     * @return Returns a request object mapped to a DTO after the UserAdmin update it's
+     * 		   statu and add comments 
+     */
     @Transactional
     public ShowRequestDto updateRequestStatus(Long requestId, int status, String comments) {
-    	
-    	ShowRequestDto requestDto = new ShowRequestDto();
     	
         Request request = requestRepository.findById(requestId)
             .orElseThrow(() -> new RuntimeException("Request not found"));
@@ -247,12 +234,7 @@ public class RequestService {
 
         requestRepository.save(request);
         
-        requestDto.setRequestId(request.getId());
-        requestDto.setFullName(request.getFullName());
-        requestDto.setStatus(request.getRequestStatus().getStatusName());
-        requestDto.setDepartment(request.getHeadDepartment().getName());
-        requestDto.setSupervisor(request.getSupervisor().getName());
- 		
+        ShowRequestDto requestDto =  mapRequestToDto(request);
         return requestDto;
     }
     
@@ -264,7 +246,31 @@ public class RequestService {
     
     
     
+    private ResponsePage<ShowRequestDto> mapRequestToPageOject(Page<Request> requestsPage,
+    		List<ShowRequestDto> requestDto ){
+    	
+    	ResponsePage<ShowRequestDto> content = new ResponsePage<>();
+    	content.setContent(requestDto);
+      	content.setPage(requestsPage.getNumber());
+      	content.setSize(requestsPage.getSize());
+      	content.setTotalElements(requestsPage.getTotalElements());
+      	content.setTotalpages(requestsPage.getTotalPages());
+      	content.setLast(requestsPage.isLast());
+      	
+    	return content;
+    }
     
+    
+    private ShowRequestDto mapRequestToDto(Request request) {
+    	
+    	ShowRequestDto tempRequesDto= new ShowRequestDto();
+ 		tempRequesDto.setRequestId(request.getId());
+ 		tempRequesDto.setFullName(request.getFullName());
+ 		tempRequesDto.setStatus(request.getRequestStatus().getStatusName());
+ 		tempRequesDto.setDepartment(request.getHeadDepartment().getName());
+ 		tempRequesDto.setSupervisor(request.getSupervisor().getName());
+ 		return tempRequesDto;
+    }
     
     private Request mapToRequest(RequestDTO requestDto) {
     	Request mappedRequest = new Request();

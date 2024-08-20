@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.title.request.DTO.AttachmentDto;
+import com.title.request.DTO.ResponsePage;
 import com.title.request.models.Attachment;
 import com.title.request.services.AttachmentService;
 import com.title.request.services.RequestService;
@@ -49,9 +50,10 @@ public class AttachmentController {
 	 
 	 
 	 @GetMapping
-	 public ResponseEntity<List<AttachmentDto>> getAttachmentByRequest(@RequestParam("requestId") Long requestId ) {
-	 	System.out.println("in the controller method");
-		 List<AttachmentDto> attachmentDto = attachmentService.findByRequestId(requestId);
+	 public ResponseEntity<ResponsePage<AttachmentDto>> getAttachmentByRequest(@RequestParam("requestId") Long requestId,
+			 @RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
+			 @RequestParam(value = "pageSize",defaultValue = "10")int pageSize){
+	 	ResponsePage<AttachmentDto> attachmentDto = attachmentService.findByRequestId(requestId,pageNo,pageSize);
 		 
 		 return ResponseEntity.ok(attachmentDto);
 	 }

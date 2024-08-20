@@ -32,7 +32,7 @@ public class SecurityConfig{
 	        // Allow all GET requests to /api/requests/** without authentication
 	        configurer
 	            .requestMatchers(HttpMethod.GET, "/api/requests/**")
-	            .permitAll();
+	            .authenticated();
 
 	        // Require authentication for POST requests to /api/requests/**
 	        configurer
@@ -43,6 +43,10 @@ public class SecurityConfig{
 	        configurer
 	            .requestMatchers(HttpMethod.POST, "api/user/**")
 	            .permitAll();
+	        
+	        configurer
+	            .requestMatchers(HttpMethod.PUT, "api/user/**")
+	            .hasAuthority("ADMIN");
 
 	        // Require authentication for POST requests to /api/attachments/**
 	        configurer
@@ -55,8 +59,40 @@ public class SecurityConfig{
 	            .authenticated();
 	        
 	        configurer
-            .requestMatchers(HttpMethod.PUT, "api/user/**")
-            .permitAll();
+	            .requestMatchers(HttpMethod.GET, "/api/head-departments/**")
+	            .authenticated();
+	        
+	        configurer
+	            .requestMatchers(HttpMethod.POST, "/api/head-departments/**")
+	            .authenticated();
+		        
+	        configurer
+	            .requestMatchers(HttpMethod.PUT, "/api/head-departments/**")
+	            .authenticated();
+		        
+	        configurer
+	            .requestMatchers(HttpMethod.DELETE, "/api/head-departments/**")
+	            .authenticated();
+	        
+	        //manager
+	        configurer
+	            .requestMatchers(HttpMethod.GET, "/api/managers/**")
+	            .authenticated();
+	        
+	        configurer
+	            .requestMatchers(HttpMethod.PUT, "/api/managers/**")
+	            .authenticated();
+	        
+	        configurer
+	            .requestMatchers(HttpMethod.POST, "/api/managers/**")
+	            .authenticated();
+		        
+	        configurer
+	            .requestMatchers(HttpMethod.DELETE, "/api/managers/**")
+	            .authenticated();
+	        
+			        
+	        
 	    });
 		
 		http.httpBasic(Customizer.withDefaults());

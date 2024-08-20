@@ -5,14 +5,18 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.title.request.DTO.AttachmentDto;
-import com.title.request.DTO.ShowRequestDto;
+import com.title.request.DTO.ResponsePage;
 import com.title.request.models.Attachment;
 import com.title.request.models.AttachmentType;
 import com.title.request.models.Request;
@@ -64,30 +68,54 @@ public class AttachmentService {
 	    }
 	
 	
-	 public List<AttachmentDto> findByRequestId(Long requestId) {
+	 public ResponsePage<AttachmentDto> findByRequestId(Long requestId,int pageNo,int pageSize) {
 		 
-		  System.out.println("in find by id");
-		  List<AttachmentDto> attachmentsDto =  new ArrayList<>();
-		 List<Attachment> attachments = attachmentRepository.findByRequest(requestRepository.findById(requestId)
-	        		.orElseThrow(()-> new RuntimeException("No request by this Id")));
-	         
-	       for(Attachment attachment : attachments) {
-	    	   AttachmentDto dto = new AttachmentDto();
-	    	   dto.setAttachmentId(attachment.getId());
-	    	   dto.setFileName(attachment.getFileName());
-	    	   dto.setAttachmentType(attachment.getAttachmentType().getName());
-	    	   dto.setRequestId(requestId);
-	    	   
-	    	   attachmentsDto.add(dto);
-	       }
-	         return attachmentsDto;
+		  
+
+		 Pageable pageable = PageRequest.of(pageNo, pageSize);
+		 Page<Attachment> attachmentsPage = attachmentRepository.findByRequest(requestRepository.findById(requestId)
+	        		.orElseThrow(()-> new RuntimeException("No request by this Id")),pageable);
+		 List<Attachment> attachments = attachmentsPage.getContent();
+		 
+		 List<AttachmentDto> attachmentsDto = attachments.parallelStream()
+				    .map(this::mapAttachmentToDto)
+				    .collect(Collectors.toList());
+	     
+		 ResponsePage<AttachmentDto> content = mapAttachmentToPageObject(attachmentsPage, attachmentsDto);
+	      return content;
 	 }
 	
 	
 	
 	
 	
+	private AttachmentDto mapAttachmentToDto(Attachment attachment) {
+	   AttachmentDto dto = new AttachmentDto();
+  	   dto.setAttachmentId(attachment.getId());
+  	   dto.setFileName(attachment.getFileName());
+  	   dto.setAttachmentType(attachment.getAttachmentType().getName());
+  	   dto.setRequestId(attachment.getId());
+  	   
+  	   return dto;
+	}
 	
+	
+	
+	private ResponsePage<AttachmentDto> mapAttachmentToPageObject(Page<Attachment> attachmentsPage,
+			 List<AttachmentDto> attachmentsDto){
+		
+		ResponsePage<AttachmentDto> content = new ResponsePage<>();
+		
+		content.setContent(attachmentsDto);
+		content.setPage(attachmentsPage.getNumber());
+      	content.setSize(attachmentsPage.getSize());
+      	content.setTotalElements(attachmentsPage.getTotalElements());
+      	content.setTotalpages(attachmentsPage.getTotalPages());
+      	content.setLast(attachmentsPage.isLast());
+	
+		return content;
+		
+	}
 	
 	
 	
