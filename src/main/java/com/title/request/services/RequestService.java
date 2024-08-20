@@ -6,12 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.title.request.DTO.RequestDTO;
+import com.title.request.DTO.ResponsePage;
 import com.title.request.DTO.ShowRequestDto;
 import com.title.request.models.Request;
 import com.title.request.models.RequestStatus;
@@ -57,11 +61,16 @@ public class RequestService {
         this.attachmentRepository=attachmentRepository;
     }
     
-    public List<ShowRequestDto> getAllRequests(){
+    public ResponsePage<ShowRequestDto> getAllRequests(int pageNo, int pageSize){
     	
-    	List<Request> requests = new ArrayList<>();
+    	//object to pass to the find all method
+    	Pageable pageable = PageRequest.of(pageNo, pageSize);
+    	
+    	Page<Request> requestsPage = requestRepository.findAll(pageable);
+    	List<Request> requests = requestsPage.getContent();
     	List<ShowRequestDto> requestDto = new ArrayList<>();
-    	requests=requestRepository.findAll();
+    	ResponsePage<ShowRequestDto> content = new ResponsePage<>();
+    	
     	for(Request request : requests) {
     		ShowRequestDto tempRequesDto= new ShowRequestDto();
     		tempRequesDto.setRequestId(request.getId());
@@ -72,7 +81,15 @@ public class RequestService {
     		
     		requestDto.add(tempRequesDto);
     	}
-    	return requestDto;
+    	
+    	content.setContent(requestDto);
+    	content.setPage(requestsPage.getNumber());
+    	content.setSize(requestsPage.getSize());
+    	content.setTotalElements(requestsPage.getTotalElements());
+    	content.setTotalpages(requestsPage.getTotalPages());
+    	content.setLast(requestsPage.isLast());
+    	
+    	return content;
     }
 
     
@@ -80,9 +97,6 @@ public class RequestService {
     public RequestDTO createRequest(RequestDTO requestDto) {
     	
     	Request mappedRequest = mapToRequest(requestDto);
-    	
-    	
-    	
     	
     	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
@@ -104,13 +118,21 @@ public class RequestService {
 
     
     
-    public List<ShowRequestDto> findByCreator(Long creatorId) {
+    public ResponsePage<ShowRequestDto> findByCreator(Long creatorId,int pageNo,int pageSize) {
+    	
+    	
+    	Pageable pageable = PageRequest.of(pageNo, pageSize);
+    	
     	UserEntity creator = userRepository.findById(creatorId).
     			orElseThrow(()-> new RuntimeException("No user exist by this id"));
          
         List<ShowRequestDto> requestDto = new ArrayList<>();
-        List<Request> requests = new ArrayList<>();
-        requests = requestRepository.findByCreator(creator);
+        
+        Page<Request> requestsPage = requestRepository.findByCreator(creator,pageable);
+        List<Request> requests = requestsPage.getContent();
+        ResponsePage<ShowRequestDto> content = new ResponsePage<>();
+        
+        //map the objects to DTO to make it more readable
         for(Request request:requests){
        	 ShowRequestDto dto = new ShowRequestDto();
        	 dto.setRequestId(request.getId());
@@ -122,19 +144,30 @@ public class RequestService {
        	 requestDto.add(dto);
         }
         
+        //set the pageable content to return it to the controller
+        content.setContent(requestDto);
+    	content.setPage(requestsPage.getNumber());
+    	content.setSize(requestsPage.getSize());
+    	content.setTotalElements(requestsPage.getTotalElements());
+    	content.setTotalpages(requestsPage.getTotalPages());
+    	content.setLast(requestsPage.isLast());
         
-        return requestDto;
+        return content;
     }
     
     
 
-    public List<ShowRequestDto> findByStatus(int status) {
+    public ResponsePage<ShowRequestDto> findByStatus(int status, int pageNo,int pageSize) {
     	RequestStatus requestStatus = statusRepository.findById(status).orElseThrow();
     	
+    	//handling the page object
+    	Pageable pageable = PageRequest.of(pageNo, pageSize);
+    	Page<Request> requestsPage = requestRepository.findByRequestStatus(requestStatus,pageable);
+        List<Request> requests = requestsPage.getContent();
+        ResponsePage<ShowRequestDto> content = new ResponsePage<>();
+        
+        //map the object to dto
     	List<ShowRequestDto> requestDto = new ArrayList<>();
-         List<Request> requests = new ArrayList<>();
-         requests = requestRepository.findByRequestStatus(requestStatus);
-         
          for(Request request:requests){
         	 ShowRequestDto dto = new ShowRequestDto();
         	 dto.setRequestId(request.getId());
@@ -146,16 +179,29 @@ public class RequestService {
         	 requestDto.add(dto);
          }
          
+        //set the pageable content to return it to the controller
+        content.setContent(requestDto);
+     	content.setPage(requestsPage.getNumber());
+     	content.setSize(requestsPage.getSize());
+     	content.setTotalElements(requestsPage.getTotalElements());
+     	content.setTotalpages(requestsPage.getTotalPages());
+     	content.setLast(requestsPage.isLast());
          
-         return requestDto;
+         return content;
     }
 
-    public List<ShowRequestDto> findByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+    public ResponsePage<ShowRequestDto> findByDateRange(LocalDateTime startDate, LocalDateTime endDate,
+    		int pageNo,int pageSize) {
          
          
-         List<Request> requests = new ArrayList<>();
+    	//handling the page object
+    	Pageable pageable = PageRequest.of(pageNo, pageSize);
+    	Page<Request> requestsPage = requestRepository.findByRequestDateBetween(startDate, endDate,pageable);
+        List<Request> requests = requestsPage.getContent();
+        ResponsePage<ShowRequestDto> content = new ResponsePage<>();
+        
+        
      	List<ShowRequestDto> requestDto = new ArrayList<>();
-     	requests = requestRepository.findByRequestDateBetween(startDate, endDate);
      	for(Request request : requests) {
      		ShowRequestDto tempRequesDto= new ShowRequestDto();
      		tempRequesDto.setRequestId(request.getId());
@@ -166,7 +212,16 @@ public class RequestService {
      		
      		requestDto.add(tempRequesDto);
      	}
-     	return requestDto;
+     	
+     	//set the pageable content to return it to the controller
+        content.setContent(requestDto);
+     	content.setPage(requestsPage.getNumber());
+     	content.setSize(requestsPage.getSize());
+     	content.setTotalElements(requestsPage.getTotalElements());
+     	content.setTotalpages(requestsPage.getTotalPages());
+     	content.setLast(requestsPage.isLast());
+         
+         return content;
     }
 
     @Transactional
@@ -201,7 +256,11 @@ public class RequestService {
         return requestDto;
     }
     
-    
+    //login using token not session
+    // service and manager make service 
+    // pagenigtion for the search
+    //extract the jason file from postman
+    //
     
     
     

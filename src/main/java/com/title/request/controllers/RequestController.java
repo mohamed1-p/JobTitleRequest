@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.title.request.DTO.RequestDTO;
+import com.title.request.DTO.ResponsePage;
 import com.title.request.DTO.ShowRequestDto;
 import com.title.request.models.Request;
 import com.title.request.models.UserEntity;
@@ -36,8 +37,11 @@ public class RequestController {
 	
 	
 	@GetMapping("/show")
-	public ResponseEntity<List<ShowRequestDto>> showRequests(){
-		return new ResponseEntity<>(requestService.getAllRequests()
+	public ResponseEntity<ResponsePage<ShowRequestDto>> showRequests(
+			@RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
+			@RequestParam(value = "pageSize",defaultValue = "10")int pageSize){
+		
+		return new ResponseEntity<>(requestService.getAllRequests(pageNo,pageSize)
 				,HttpStatus.OK);
 	}
 	
@@ -49,28 +53,34 @@ public class RequestController {
 	
 	
 	@GetMapping("/creator")
-    public ResponseEntity<List<ShowRequestDto>> getRequestsByCreator(@RequestParam Long creatorId) {
-        List<ShowRequestDto> requests = requestService.findByCreator(creatorId);
+    public ResponseEntity<ResponsePage<ShowRequestDto>> getRequestsByCreator(@RequestParam Long creatorId,
+    		@RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
+			@RequestParam(value = "pageSize",defaultValue = "10")int pageSize) {
+		ResponsePage<ShowRequestDto> requests = requestService.findByCreator(creatorId,pageNo,pageSize);
         return ResponseEntity.ok(requests);
     }
 	
 	
 	@GetMapping("/status")
-    public ResponseEntity<List<ShowRequestDto>> getRequestsByStatus(@RequestParam int status) {
-        List<ShowRequestDto> requests = requestService.findByStatus(status);
+    public ResponseEntity<ResponsePage<ShowRequestDto>> getRequestsByStatus(@RequestParam int status,
+    		@RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
+			@RequestParam(value = "pageSize",defaultValue = "10")int pageSize) {
+		ResponsePage<ShowRequestDto> requests = requestService.findByStatus(status,pageNo,pageSize);
         return ResponseEntity.ok(requests);
     }
 	
 	@GetMapping("/date-range")
-    public ResponseEntity<List<ShowRequestDto>> getRequestsByDateRange(
+    public ResponseEntity<ResponsePage<ShowRequestDto>> getRequestsByDateRange(
             @RequestParam String startDate,
-            @RequestParam String endDate) {
+            @RequestParam String endDate,
+            @RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
+			@RequestParam(value = "pageSize",defaultValue = "10")int pageSize) {
 		
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	    LocalDateTime startDateTime = LocalDateTime.parse(startDate, formatter);
 	    LocalDateTime endDateTime = LocalDateTime.parse(endDate, formatter);
 		
-        List<ShowRequestDto> requests = requestService.findByDateRange(startDateTime, endDateTime);
+	    ResponsePage<ShowRequestDto> requests = requestService.findByDateRange(startDateTime, endDateTime,pageNo,pageSize);
         return ResponseEntity.ok(requests);
     }
 	
