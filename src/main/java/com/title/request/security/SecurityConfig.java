@@ -19,6 +19,7 @@ public class SecurityConfig{
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
 		http.authorizeHttpRequests(configurer -> {
+			
 	        // Restrict DELETE requests to /api/requests/** to ADMIN role
 	        configurer
 	            .requestMatchers(HttpMethod.DELETE, "/api/requests/**")
@@ -29,16 +30,7 @@ public class SecurityConfig{
 	            .requestMatchers(HttpMethod.PUT, "/api/requests/**")
 	            .hasAuthority("ADMIN");
 
-	        // Allow all GET requests to /api/requests/** without authentication
-	        configurer
-	            .requestMatchers(HttpMethod.GET, "/api/requests/**")
-	            .authenticated();
-
-	        // Require authentication for POST requests to /api/requests/**
-	        configurer
-	            .requestMatchers(HttpMethod.POST, "/api/requests/**")
-	            .authenticated();
-
+	        
 	        // Allow all POST requests to /api/user/**
 	        configurer
 	            .requestMatchers(HttpMethod.POST, "api/user/**")
@@ -48,50 +40,13 @@ public class SecurityConfig{
 	            .requestMatchers(HttpMethod.PUT, "api/user/**")
 	            .hasAuthority("ADMIN");
 
-	        // Require authentication for POST requests to /api/attachments/**
+	        
+	        //authenticate every request that begins with this string
 	        configurer
-	            .requestMatchers(HttpMethod.POST, "api/attachments/**")
-	            .authenticated();
-
-	        // Require authentication for GET requests to /api/attachments/**
-	        configurer
-	            .requestMatchers(HttpMethod.GET, "api/attachments/**")
+	            .requestMatchers("/api/**")
 	            .authenticated();
 	        
-	        configurer
-	            .requestMatchers(HttpMethod.GET, "/api/head-departments/**")
-	            .authenticated();
-	        
-	        configurer
-	            .requestMatchers(HttpMethod.POST, "/api/head-departments/**")
-	            .authenticated();
-		        
-	        configurer
-	            .requestMatchers(HttpMethod.PUT, "/api/head-departments/**")
-	            .authenticated();
-		        
-	        configurer
-	            .requestMatchers(HttpMethod.DELETE, "/api/head-departments/**")
-	            .authenticated();
-	        
-	        //manager
-	        configurer
-	            .requestMatchers(HttpMethod.GET, "/api/managers/**")
-	            .authenticated();
-	        
-	        configurer
-	            .requestMatchers(HttpMethod.PUT, "/api/managers/**")
-	            .authenticated();
-	        
-	        configurer
-	            .requestMatchers(HttpMethod.POST, "/api/managers/**")
-	            .authenticated();
-		        
-	        configurer
-	            .requestMatchers(HttpMethod.DELETE, "/api/managers/**")
-	            .authenticated();
-	        
-			        
+	       	        
 	        
 	    });
 		

@@ -29,7 +29,7 @@ public class ManagerService {
 		 Page<Manager> managersPage =  managerRepository.findAll(pageable);
 		 List<Manager> managers = managersPage.getContent();
 		 
-        return mapAttachmentToPageObject(managersPage,managers);
+        return mapManagerToPageObject(managersPage,managers);
     }
 
     public Manager findById(Long id) {
@@ -60,7 +60,7 @@ public class ManagerService {
     
     
     
-    private ResponsePage<Manager> mapAttachmentToPageObject(Page<Manager> maangersPage,
+    private ResponsePage<Manager> mapManagerToPageObject(Page<Manager> maangersPage,
 			 List<Manager> manager){
 		
 		ResponsePage<Manager> content = new ResponsePage<>();
