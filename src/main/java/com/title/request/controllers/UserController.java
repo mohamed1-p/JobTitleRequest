@@ -1,19 +1,26 @@
 package com.title.request.controllers;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.title.request.DTO.AuthResponse;
 import com.title.request.DTO.LoginDto;
 import com.title.request.DTO.RegisterDto;
 
+import com.title.request.security.JwtTokenProvider;
 import com.title.request.services.UserService;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,14 +35,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class UserController {
 
 	
-	private AuthenticationManager authenticationManager;
-	
 	private UserService userService;
 	
 	@Autowired
-	public UserController(AuthenticationManager authenticationManager,
-						  UserService userService){
-		this.authenticationManager=authenticationManager;
+	public UserController( UserService userService){
 		this.userService=userService;
 		
 	}
@@ -44,33 +47,26 @@ public class UserController {
 	
 	
 	@PostMapping("/register")
-	public ResponseEntity<String> registerNewUser(@RequestBody RegisterDto entity) {
-		if(userService.saveUser(entity)) {
-			return new ResponseEntity<>("register success!",HttpStatus.OK);
-		}
+	public ResponseEntity<AuthResponse> registerNewUser(@RequestBody RegisterDto registerDto) {
 		
-		return new ResponseEntity<>("register failed! user already exist",HttpStatus.BAD_REQUEST);
+		return ResponseEntity.ok(userService.register(registerDto));
 	}
 	
 	
 	@PostMapping("/login")
-	public ResponseEntity<String> login(@RequestBody LoginDto loginDto) {
-		Authentication auth =  authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginDto.getUserName(),
-						loginDto.getPassword()));
-		SecurityContextHolder.getContext().setAuthentication(auth);
-		
-		return new ResponseEntity<>("welcome",HttpStatus.OK);
-	}
-	
+    public ResponseEntity<AuthResponse> authenticateUser(@RequestBody LoginDto LoginDto) {
+      
+		return ResponseEntity.ok(userService.authenticate(LoginDto));
+    }
+
 	
 	
 	
 	@PutMapping("/{username}/make-admin")
 	public ResponseEntity<String> makeUserAdmin(@PathVariable String username) {
         boolean success = userService.changeUserRoleToAdmin(username);
-        System.out.println(success);
         if (success) {
+        	
             return ResponseEntity.ok("User role updated to ADMIN.");
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to update user role.");

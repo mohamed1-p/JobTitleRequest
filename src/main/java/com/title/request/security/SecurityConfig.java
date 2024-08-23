@@ -1,23 +1,38 @@
 package com.title.request.security;
 
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig{
+@RequiredArgsConstructor
+public class SecurityConfig {
 
+	private final JwtTokenFilter jwtTokenFilter;
+	private final AuthenticationProvider authenticationProvider;
+	
+	 
+	
 	
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+		
+		http.csrf(csrf-> csrf.disable());
+		
 		http.authorizeHttpRequests(configurer -> {
 			
 	        // Restrict DELETE requests to /api/requests/** to ADMIN role
@@ -50,28 +65,20 @@ public class SecurityConfig{
 	        
 	    });
 		
+		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+		.and().authenticationProvider(authenticationProvider)
+		.addFilterBefore(jwtTokenFilter,UsernamePasswordAuthenticationFilter.class);
+		
 		http.httpBasic(Customizer.withDefaults());
-
 		
 		
 		
-		
-		http.csrf(csrf-> csrf.disable());
 		return http.build();
 	}
 	
 
-	@Bean
-	AuthenticationManager authenticationManger(
-			AuthenticationConfiguration authenticationConfiguration) 
-			throws Exception{
-		return authenticationConfiguration.getAuthenticationManager();
-		
-	}
 	
-	@Bean
-	BCryptPasswordEncoder passwordEncoder() {
-		 return new BCryptPasswordEncoder();
-	}
+	
+	
 	
 }
