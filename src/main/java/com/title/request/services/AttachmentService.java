@@ -45,6 +45,23 @@ public class AttachmentService {
 	
 	
 	
+	
+	
+	
+	public ResponsePage<AttachmentDto> getAll(int pageNo, int pageSize) {
+		
+		 Pageable pageable = PageRequest.of(pageNo, pageSize);
+		 Page<Attachment> attachmentsPage = attachmentRepository.findAll(pageable);
+		 List<Attachment> attachments = attachmentsPage.getContent();
+		 
+		 List<AttachmentDto> attachmentsDto = attachments.parallelStream()
+				    .map(this::mapAttachmentToDto)
+				    .collect(Collectors.toList());
+	     
+		 ResponsePage<AttachmentDto> content = mapAttachmentToPageObject(attachmentsPage, attachmentsDto);
+	      return content;
+	}
+	
 	@Transactional
 	 public AttachmentDto saveFile(MultipartFile file, Long requestId)
 			 throws IOException {
@@ -94,7 +111,7 @@ public class AttachmentService {
   	   dto.setAttachmentId(attachment.getId());
   	   dto.setFileName(attachment.getFileName());
   	   dto.setAttachmentType(attachment.getAttachmentType().getName());
-  	   dto.setRequestId(attachment.getId());
+  	   dto.setRequestId(attachment.getRequest().getId());
   	   
   	   return dto;
 	}

@@ -49,27 +49,6 @@ public class UserService  {
         this.jwtTokenProvider=jwtTokenProvider;
         this.authenticationManager=authenticationManager;
     }
-
-   
-    public AuthResponse saveUser(RegisterDto userDto) {
-    	if(userRepository.existsByusername(userDto.getUserName())) {
-    	return null;
-    	}
-    	UserEntity user = new UserEntity();
-    	user.setName(userDto.getName());
-    	user.setUsername(userDto.getUserName());
-    	user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-    	
-    	RoleEntity role = roleRepository.findByRole("EMPLOYEE").orElseThrow();
-    	
-    	user.setRoles(Collections.singletonList(role));
-        userRepository.save(user);
-        var jwtToken = jwtTokenProvider.generateToken(user);
-        
-        return AuthResponse.builder()
-        		.accessToken(jwtToken)
-        		.build();
-    }
     
     
     public AuthResponse register(RegisterDto userDto) {

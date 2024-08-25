@@ -24,17 +24,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class AttachmentController {
 	 	
 	private final AttachmentService attachmentService;
-	private final RequestService requestService;
+	
 	
 	 @Autowired
-	    public AttachmentController(AttachmentService attachmentService, 
-	                                RequestService requestService
-	                               ) {
+	    public AttachmentController(AttachmentService attachmentService) {
 	        this.attachmentService = attachmentService;
-	        this.requestService = requestService;
+	      
 	        
 	    }
 	 
+	 
+	 @GetMapping
+	 public ResponseEntity<ResponsePage<AttachmentDto>> getAttachmentByRequest(
+			 @RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
+			 @RequestParam(value = "pageSize",defaultValue = "10")int pageSize){
+	 	ResponsePage<AttachmentDto> attachmentDto = attachmentService.getAll(pageNo,pageSize);
+		 
+		 return ResponseEntity.ok(attachmentDto);
+	 }
 	 
 	 @PostMapping("/upload")
 	    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file,
@@ -49,7 +56,7 @@ public class AttachmentController {
 	 
 	 
 	 
-	 @GetMapping
+	 @GetMapping("by-request")
 	 public ResponseEntity<ResponsePage<AttachmentDto>> getAttachmentByRequest(@RequestParam("requestId") Long requestId,
 			 @RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
 			 @RequestParam(value = "pageSize",defaultValue = "10")int pageSize){
