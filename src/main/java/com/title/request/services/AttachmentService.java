@@ -109,15 +109,15 @@ public class AttachmentService {
 	 
 	 
 	 public Resource getFile(Long attachmentId) throws IOException {
-	        // Retrieve the attachment from the database
+	       
 	        Attachment attachment = attachmentRepository.findById(attachmentId)
 	            .orElseThrow(() -> new RuntimeException("Attachment not found with id: " + attachmentId));
 
-	        // Get the file path
+	       
 	        Path filePath = Paths.get(attachment.getFilePath());
 	        Resource resource = new UrlResource(filePath.toUri());
 
-	        // Check if the file exists
+	        
 	        if (!resource.exists()) {
 	            throw new RuntimeException("File not found: " + attachment.getFileName());
 	        }
