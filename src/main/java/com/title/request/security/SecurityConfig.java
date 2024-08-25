@@ -54,7 +54,11 @@ public class SecurityConfig {
 	        configurer
 	            .requestMatchers(HttpMethod.PUT, "api/user/**")
 	            .hasAuthority("ADMIN");
-
+	        
+	        configurer
+            .requestMatchers(HttpMethod.GET, "api/attachments/**")
+            .hasAuthority("ADMIN");
+	       
 	        
 	        //authenticate every request that begins with this string
 	        configurer
@@ -65,11 +69,11 @@ public class SecurityConfig {
 	        
 	    });
 		
+		http.addFilterBefore(jwtTokenFilter,UsernamePasswordAuthenticationFilter.class);
 		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-		.and().authenticationProvider(authenticationProvider)
-		.addFilterBefore(jwtTokenFilter,UsernamePasswordAuthenticationFilter.class);
+		.and().authenticationProvider(authenticationProvider);
 		
-		http.httpBasic(Customizer.withDefaults());
+		
 		
 		
 		

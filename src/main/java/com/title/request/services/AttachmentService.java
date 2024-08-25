@@ -2,19 +2,25 @@ package com.title.request.services;
 
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import com.title.request.DTO.AttachmentDto;
 import com.title.request.DTO.ResponsePage;
 import com.title.request.models.Attachment;
@@ -63,7 +69,7 @@ public class AttachmentService {
 	}
 	
 	@Transactional
-	 public AttachmentDto saveFile(MultipartFile file, Long requestId)
+	 public Attachment saveFile(MultipartFile file, Long requestId)
 			 throws IOException {
 		 
 		
@@ -80,30 +86,45 @@ public class AttachmentService {
 	        attachment.setUploadDate(LocalDateTime.now());
 	        attachment.setRequest(request);
 
-	         attachmentRepository.save(attachment);
-	         return new AttachmentDto(attachment.getId(),fileName,type.getName(),requestId);
-	    }
+	        return attachmentRepository.save(attachment);
+	         
+	}
 	
 	
 	 public ResponsePage<AttachmentDto> findByRequestId(Long requestId,int pageNo,int pageSize) {
 		 
-		  
-
 		 Pageable pageable = PageRequest.of(pageNo, pageSize);
 		 Page<Attachment> attachmentsPage = attachmentRepository.findByRequest(requestRepository.findById(requestId)
 	        		.orElseThrow(()-> new RuntimeException("No request by this Id")),pageable);
 		 List<Attachment> attachments = attachmentsPage.getContent();
 		 
-		 List<AttachmentDto> attachmentsDto = attachments.parallelStream()
+		 List<AttachmentDto> attachmentsDto = attachments.stream()
 				    .map(this::mapAttachmentToDto)
 				    .collect(Collectors.toList());
 	     
 		 ResponsePage<AttachmentDto> content = mapAttachmentToPageObject(attachmentsPage, attachmentsDto);
 	      return content;
 	 }
-	
-	
-	
+	 
+	 
+	 
+	 public Resource getFile(Long attachmentId) throws IOException {
+	        // Retrieve the attachment from the database
+	        Attachment attachment = attachmentRepository.findById(attachmentId)
+	            .orElseThrow(() -> new RuntimeException("Attachment not found with id: " + attachmentId));
+
+	        // Get the file path
+	        Path filePath = Paths.get(attachment.getFilePath());
+	        Resource resource = new UrlResource(filePath.toUri());
+
+	        // Check if the file exists
+	        if (!resource.exists()) {
+	            throw new RuntimeException("File not found: " + attachment.getFileName());
+	        }
+
+	        return resource;
+	    }
+	 
 	
 	
 	private AttachmentDto mapAttachmentToDto(Attachment attachment) {
@@ -112,6 +133,7 @@ public class AttachmentService {
   	   dto.setFileName(attachment.getFileName());
   	   dto.setAttachmentType(attachment.getAttachmentType().getName());
   	   dto.setRequestId(attachment.getRequest().getId());
+  	
   	   
   	   return dto;
 	}
