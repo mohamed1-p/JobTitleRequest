@@ -37,19 +37,19 @@ public class Request {
     private UserEntity creator;
 
     @ManyToOne
-    @JoinColumn(name = "manager_id", nullable = false)
+    @JoinColumn(name = "manager_id")
     private Manager manager;
 
     @ManyToOne
-    @JoinColumn(name = "supervisor_id", nullable = false)
+    @JoinColumn(name = "supervisor_id")
     private Supervisor supervisor;
 
     @ManyToOne
-    @JoinColumn(name = "head_department_id", nullable = false)
+    @JoinColumn(name = "head_department_id")
     private HeadDepartment headDepartment;
 
     @ManyToOne
-    @JoinColumn(name = "unit_head_id", nullable = false)
+    @JoinColumn(name = "unit_head_id")
     private UnitHead unitHead;
 
     @ManyToOne(optional = false)

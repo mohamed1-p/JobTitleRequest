@@ -7,7 +7,9 @@ public class ShowRequestDto {
 
 	private Long requestId;
 	private String fullName;
+	private String creatorName;
+	private String positionType;
+	private String positionCode;
 	private String status;
-	private String department;
-	private String supervisor;
+
 }

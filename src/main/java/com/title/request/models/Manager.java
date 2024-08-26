@@ -26,5 +26,11 @@ public class Manager {
 
     @Column(nullable = false, unique = true)
     private String code;
+    
+    @Column(nullable = false)
+    private String location;
+     
+    @Column(nullable = false)
+    private String sector;
 
 }

@@ -65,7 +65,7 @@ public class JwtTokenProvider {
 				.getBody();
 	}
 	
-	//understand what hmacshakeyfor does
+	
 	private  Key getSignInKey() {
 		
 		byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);

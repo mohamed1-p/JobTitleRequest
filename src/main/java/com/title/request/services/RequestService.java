@@ -2,7 +2,6 @@ package com.title.request.services;
 
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -95,7 +94,7 @@ public class RequestService {
      */
     public RequestDTO createRequest(RequestDTO requestDto) {
     	
-    	Request mappedRequest = mapToRequest(requestDto);
+    	Request mappedRequest = new Request();
     	
     	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
@@ -108,7 +107,28 @@ public class RequestService {
     	mappedRequest.setCreator(creator);
     	
     	mappedRequest.setRequestDate(LocalDateTime.now());
+    	mappedRequest.setFullName(requestDto.getFullName());
     	mappedRequest.setRequestStatus(statusRepository.findById(0).orElseThrow());
+    	
+    	switch (requestDto.getSelectedPosition()) {
+        case "manager":
+            mappedRequest.setManager(managerRepository.findByCode(requestDto.getPositionCode())
+            		.orElseThrow(()-> new RuntimeException("No manager exist by this code")));
+            break;
+        case "supervisor":
+            mappedRequest.setSupervisor(supervisorRepository.findByCode(requestDto.getPositionCode())
+            		.orElseThrow(()-> new RuntimeException("No superviser exist by this code")));
+            break;
+        case "headDepartment":
+            mappedRequest.setHeadDepartment(headDepartmentRepository.findByCode(requestDto.getPositionCode())
+            		.orElseThrow(()-> new RuntimeException("No head departement exist by this code")));
+            break;
+        case "unitHead":
+            mappedRequest.setUnitHead(unitHeadRepository.findByCode(requestDto.getPositionCode())
+            		.orElseThrow(()-> new RuntimeException("No unit head exist by this code")));
+            break;
+    }
+    	
     	
         requestRepository.save(mappedRequest);
         mappedRequest.setAttachments(attachmentRepository.findByRequest(mappedRequest));
@@ -238,12 +258,7 @@ public class RequestService {
         return requestDto;
     }
     
-    //login using token not session
-    // service and manager make service 
-    // pagenigtion for the search
-    //extract the jason file from postman
-    //
-    
+ 
     
     
     private ResponsePage<ShowRequestDto> mapRequestToPageOject(Page<Request> requestsPage,
@@ -266,21 +281,27 @@ public class RequestService {
     	ShowRequestDto tempRequesDto= new ShowRequestDto();
  		tempRequesDto.setRequestId(request.getId());
  		tempRequesDto.setFullName(request.getFullName());
+ 		tempRequesDto.setCreatorName(request.getCreator().getName());
  		tempRequesDto.setStatus(request.getRequestStatus().getStatusName());
- 		tempRequesDto.setDepartment(request.getHeadDepartment().getName());
- 		tempRequesDto.setSupervisor(request.getSupervisor().getName());
+ 		
+ 		 if (request.getManager() != null) {
+ 			tempRequesDto.setPositionType("Manager");
+ 			tempRequesDto.setPositionCode(request.getManager().getCode());
+ 	    } else if (request.getSupervisor() != null) {
+ 	    	tempRequesDto.setPositionType("Supervisor");
+ 	    	tempRequesDto.setPositionCode(request.getSupervisor().getCode());
+ 	    } else if (request.getHeadDepartment() != null) {
+ 	    	tempRequesDto.setPositionType("Head Department");
+ 	    	tempRequesDto.setPositionCode(request.getHeadDepartment().getCode());
+ 	    } else if (request.getUnitHead() != null) {
+ 	    	tempRequesDto.setPositionType("Unit Head");
+ 	    	tempRequesDto.setPositionCode(request.getUnitHead().getCode());
+ 	    } else {
+ 	    	tempRequesDto.setPositionType("Unknown");
+ 	    	tempRequesDto.setPositionCode(null);
+ 	    }
  		return tempRequesDto;
     }
     
-    private Request mapToRequest(RequestDTO requestDto) {
-    	Request mappedRequest = new Request();
-    	
-    	mappedRequest.setManager(managerRepository.findByCode(requestDto.getManagerCode()));
-    	mappedRequest.setSupervisor(supervisorRepository.findByCode(requestDto.getSupervisorCode()));
-    	mappedRequest.setHeadDepartment(headDepartmentRepository.findByCode(requestDto.getHeadDepartmentCode()));
-    	mappedRequest.setUnitHead(unitHeadRepository.findByCode(requestDto.getUnitHeadCode()));
-    	mappedRequest.setFullName(requestDto.getFullName());
-    	
-    	return mappedRequest;
-    }
+    
 }

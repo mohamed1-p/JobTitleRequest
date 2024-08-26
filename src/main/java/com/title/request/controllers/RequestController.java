@@ -2,7 +2,10 @@ package com.title.request.controllers;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,11 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.title.request.DTO.JobDto;
 import com.title.request.DTO.RequestDTO;
 import com.title.request.DTO.ResponsePage;
 import com.title.request.DTO.ShowRequestDto;
-import com.title.request.models.Request;
-import com.title.request.models.UserEntity;
+import com.title.request.services.JobService;
 import com.title.request.services.RequestService;
 
 @RestController
@@ -28,11 +31,14 @@ import com.title.request.services.RequestService;
 public class RequestController {
 
 	private final RequestService requestService;
+	private final JobService jobService;
 	
 	@Autowired
-	public RequestController(RequestService requestService) {
+	public RequestController(RequestService requestService,
+			JobService jobService) {
 	
 		this.requestService=requestService;
+		this.jobService=jobService;
 	}
 	
 	
@@ -45,11 +51,39 @@ public class RequestController {
 				,HttpStatus.OK);
 	}
 	
+	
+	@GetMapping("/jobs")
+	public ResponseEntity<?> showRequests(@RequestParam String jobType,
+			@RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
+			@RequestParam(value = "pageSize",defaultValue = "10")int pageSize){
+		
+		if (!isValidPosition(jobType)) {
+	        return ResponseEntity.badRequest().body("Invalid position selected");
+	    }
+		List<JobDto> availableJobs = jobService.getAvailableJobsForPosition(jobType);
+
+		return ResponseEntity.ok(availableJobs);
+		
+	}
+	
+	
+	
+	
+	
 	@PostMapping("/create")
-    public ResponseEntity<RequestDTO> createRequest(@RequestBody RequestDTO requestDto) {
-        RequestDTO createdRequest = requestService.createRequest(requestDto);
-        return ResponseEntity.ok(createdRequest);
-    }
+    public ResponseEntity<String> createRequest(@RequestBody RequestDTO requestDto) {
+		
+		 if (!isValidPosition(requestDto.getSelectedPosition())) {
+		        return ResponseEntity.badRequest().body("Invalid position selected");
+		    }
+        requestService.createRequest(requestDto);
+        
+        return ResponseEntity.ok("Created");
+	}
+	
+	
+	
+	
 	
 	
 	@GetMapping("/creator")
@@ -59,6 +93,9 @@ public class RequestController {
 		ResponsePage<ShowRequestDto> requests = requestService.findByCreator(creatorId,pageNo,pageSize);
         return ResponseEntity.ok(requests);
     }
+	
+	
+	
 	
 	
 	@GetMapping("/status")
@@ -93,6 +130,20 @@ public class RequestController {
         ShowRequestDto updatedRequest = requestService.updateRequestStatus(requestId, status, comments);
         return ResponseEntity.ok(updatedRequest);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+private boolean isValidPosition(String position) {
+    return Arrays.asList("manager", "supervisor", "headDepartment", "unitHead").contains(position);
 }
 
 
@@ -106,6 +157,8 @@ public class RequestController {
 
 
 
+
+}
 
 
 
