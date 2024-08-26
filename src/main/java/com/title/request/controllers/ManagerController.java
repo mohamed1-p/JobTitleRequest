@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.title.request.DTO.JobDto;
 import com.title.request.DTO.ResponsePage;
 import com.title.request.models.Manager;
 import com.title.request.services.ManagerService;
@@ -29,10 +30,10 @@ public class ManagerController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponsePage<Manager>> getAllManagers(
+    public ResponseEntity<ResponsePage<JobDto>> getAllManagers(
         	@RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
     		@RequestParam(value = "pageSize",defaultValue = "10")int pageSize) {
-        ResponsePage<Manager> managers = managerService.findAll(pageNo,pageSize);
+        ResponsePage<JobDto> managers = managerService.findAll(pageNo,pageSize);
         return new ResponseEntity<>(managers, HttpStatus.OK);
     }
 

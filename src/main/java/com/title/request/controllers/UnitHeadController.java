@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.title.request.DTO.JobDto;
 import com.title.request.DTO.ResponsePage;
 import com.title.request.models.UnitHead;
 import com.title.request.services.UnitHeadService;
@@ -29,10 +30,10 @@ public class UnitHeadController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponsePage<UnitHead>> getAllUnitHeads(
+    public ResponseEntity<ResponsePage<JobDto>> getAllUnitHeads(
     		@RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
     		@RequestParam(value = "pageSize",defaultValue = "10")int pageSize) {
-        ResponsePage<UnitHead> unitHeads = unitHeadService.findAll(pageNo,pageSize);
+        ResponsePage<JobDto> unitHeads = unitHeadService.findAll(pageNo,pageSize);
         return new ResponseEntity<>(unitHeads, HttpStatus.OK);
     }
 

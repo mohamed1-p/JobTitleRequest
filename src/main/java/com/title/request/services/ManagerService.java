@@ -1,6 +1,7 @@
 package com.title.request.services;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -8,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.title.request.DTO.JobDto;
 import com.title.request.DTO.ResponsePage;
 
 import com.title.request.models.Manager;
@@ -23,13 +25,16 @@ public class ManagerService {
         this.managerRepository = managerRepository;
     }
 
-    public ResponsePage<Manager> findAll(int pageNo, int pageSize) {
+    public ResponsePage<JobDto> findAll(int pageNo, int pageSize) {
     	
     	 Pageable pageable = PageRequest.of(pageNo, pageSize);
 		 Page<Manager> managersPage =  managerRepository.findAll(pageable);
 		 List<Manager> managers = managersPage.getContent();
+		 List<JobDto> jobDTo = managers.stream()
+				 	.map(this::mapManagerToJobDTO).
+				 	collect(Collectors.toList());
 		 
-        return mapManagerToPageObject(managersPage,managers);
+        return mapManagerToPageObject(managersPage,jobDTo);
     }
 
     public Manager findById(Long id) {
@@ -60,10 +65,10 @@ public class ManagerService {
     
     
     
-    private ResponsePage<Manager> mapManagerToPageObject(Page<Manager> maangersPage,
-			 List<Manager> manager){
+    private ResponsePage<JobDto> mapManagerToPageObject(Page<Manager> maangersPage,
+			 List<JobDto> manager){
 		
-		ResponsePage<Manager> content = new ResponsePage<>();
+		ResponsePage<JobDto> content = new ResponsePage<>();
 		
 		content.setContent(manager);
 		content.setPage(maangersPage.getNumber());
@@ -76,7 +81,15 @@ public class ManagerService {
 		
 	}
     
-    
+    private JobDto mapManagerToJobDTO(Manager manager) {
+         JobDto dto = new JobDto();
+         dto.setCode(manager.getCode());
+         dto.setLocation(manager.getLocation());
+         dto.setName(manager.getName());
+         dto.setSector(manager.getSector());
+         dto.setTitle("manager");
+         return dto;
+    }
     
     
     

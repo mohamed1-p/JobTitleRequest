@@ -3,10 +3,10 @@ package com.title.request.controllers;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.title.request.DTO.JobDto;
+
 import com.title.request.DTO.RequestDTO;
 import com.title.request.DTO.ResponsePage;
 import com.title.request.DTO.ShowRequestDto;
@@ -60,7 +60,7 @@ public class RequestController {
 		if (!isValidPosition(jobType)) {
 	        return ResponseEntity.badRequest().body("Invalid position selected");
 	    }
-		List<JobDto> availableJobs = jobService.getAvailableJobsForPosition(jobType);
+		ResponsePage<?> availableJobs = jobService.getAvailableJobsForPosition(jobType,pageNo,pageSize);
 
 		return ResponseEntity.ok(availableJobs);
 		
@@ -142,10 +142,30 @@ public class RequestController {
 
 
 
-private boolean isValidPosition(String position) {
-    return Arrays.asList("manager", "supervisor", "headDepartment", "unitHead").contains(position);
-}
 
+private static final List<String> VALID_POSITIONS = Arrays.asList(
+        "manager", "supervisor", "headDepartment", "unitHead"
+);
+
+
+private boolean isValidPosition(String position) {
+    if (position == null) {
+        return false;
+    }
+
+    
+    String normalizedPosition = position.toLowerCase();
+
+    for (String validPosition : VALID_POSITIONS) {
+        
+        if (validPosition.equalsIgnoreCase(normalizedPosition)) {
+            return true;
+        }
+        
+    }
+
+    return false;
+}
 
 
 

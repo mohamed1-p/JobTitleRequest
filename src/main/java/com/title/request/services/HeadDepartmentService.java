@@ -1,18 +1,19 @@
 package com.title.request.services;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.title.request.DTO.JobDto;
 import com.title.request.DTO.ResponsePage;
-import com.title.request.DTO.ShowRequestDto;
+
 import com.title.request.models.HeadDepartment;
-import com.title.request.models.Request;
+
 import com.title.request.repository.HeadDepartmentRepository;
 
 @Service
@@ -25,13 +26,16 @@ public class HeadDepartmentService {
         this.headDepartmentRepository = headDepartmentRepository;
     }
 
-    public ResponsePage<HeadDepartment> findAll(int pageNo, int pageSize) {
+    public ResponsePage<JobDto> findAll(int pageNo, int pageSize) {
 
     	Pageable pageable = PageRequest.of(pageNo, pageSize);
         Page<HeadDepartment> departmentsPage = headDepartmentRepository.findAll(pageable);
         List<HeadDepartment> departments = departmentsPage.getContent();
         
-    	return mapRequestToPageOject(departmentsPage,departments);
+        List<JobDto> jobDTo = departments.stream()
+			 	.map(this::mapDepartmentToJobDTO).
+			 	collect(Collectors.toList());
+    	return mapRequestToPageOject(departmentsPage,jobDTo);
     }
 
     public HeadDepartment findById(Long id) {
@@ -64,10 +68,10 @@ public class HeadDepartmentService {
     
   
     
-    private ResponsePage<HeadDepartment> mapRequestToPageOject(Page<HeadDepartment> departmentsPage,
-    		List<HeadDepartment> department ){
+    private ResponsePage<JobDto> mapRequestToPageOject(Page<HeadDepartment> departmentsPage,
+    		List<JobDto> department ){
     	
-    	ResponsePage<HeadDepartment> content = new ResponsePage<>();
+    	ResponsePage<JobDto> content = new ResponsePage<>();
     	content.setContent(department);
       	content.setPage(departmentsPage.getNumber());
       	content.setSize(departmentsPage.getSize());
@@ -79,7 +83,15 @@ public class HeadDepartmentService {
     }
     
     
-    
+    private JobDto mapDepartmentToJobDTO(HeadDepartment headDep) {
+        JobDto dto = new JobDto();
+        dto.setCode(headDep.getCode());
+        dto.setLocation(headDep.getLocation());
+        dto.setName(headDep.getName());
+        dto.setSector(headDep.getSector());
+        dto.setTitle("Head Department");
+        return dto;
+   }
     
     
     

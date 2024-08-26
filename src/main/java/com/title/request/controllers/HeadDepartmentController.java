@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.title.request.DTO.JobDto;
 import com.title.request.DTO.ResponsePage;
 import com.title.request.models.HeadDepartment;
 import com.title.request.services.HeadDepartmentService;
@@ -30,10 +31,10 @@ public class HeadDepartmentController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponsePage<HeadDepartment>> getAllHeadDepartments(
+    public ResponseEntity<ResponsePage<JobDto>> getAllHeadDepartments(
     		@RequestParam(value = "pageNo",defaultValue = "0")int pageNo,
 			@RequestParam(value = "pageSize",defaultValue = "10")int pageSize) {
-    	ResponsePage<HeadDepartment> headDepartments = headDepartmentService.findAll(pageNo,pageSize);
+    	ResponsePage<JobDto> headDepartments = headDepartmentService.findAll(pageNo,pageSize);
         return new ResponseEntity<>(headDepartments, HttpStatus.OK);
     }
 

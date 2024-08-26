@@ -1,6 +1,7 @@
 package com.title.request.services;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -8,7 +9,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.title.request.DTO.JobDto;
 import com.title.request.DTO.ResponsePage;
+import com.title.request.models.Manager;
 import com.title.request.models.Supervisor;
 import com.title.request.models.UnitHead;
 import com.title.request.repository.UnitHeadRepository;
@@ -23,12 +26,16 @@ public class UnitHeadService {
         this.unitHeadRepository = unitHeadRepository;
     }
 
-    public ResponsePage<UnitHead> findAll(int pageNo, int pageSize) {
+    public ResponsePage<JobDto> findAll(int pageNo, int pageSize) {
     	Pageable pageable = PageRequest.of(pageNo, pageSize);
 		 Page<UnitHead> unitHeadPage =  unitHeadRepository.findAll(pageable);
 		 List<UnitHead> unitHead = unitHeadPage.getContent();
 		 
-    	return mapunitHeadToPageObject(unitHeadPage,unitHead);
+		 List<JobDto> jobDTo = unitHead.stream()
+				 	.map(this::mapUnitHeadToJobDTO).
+				 	collect(Collectors.toList());
+		 
+    	return mapunitHeadToPageObject(unitHeadPage,jobDTo);
     }
 
     public UnitHead findById(Long id) {
@@ -54,10 +61,10 @@ public class UnitHeadService {
     
     
     
-    private ResponsePage<UnitHead> mapunitHeadToPageObject(Page<UnitHead> headPage,
-			 List<UnitHead> unitHead){
+    private ResponsePage<JobDto> mapunitHeadToPageObject(Page<UnitHead> headPage,
+			 List<JobDto> unitHead){
 		
-		ResponsePage<UnitHead> content = new ResponsePage<>();
+		ResponsePage<JobDto> content = new ResponsePage<>();
 		
 		content.setContent(unitHead);
 		content.setPage(headPage.getNumber());
@@ -69,4 +76,25 @@ public class UnitHeadService {
 		return content;
 		
 	}
+    
+    
+    
+    private JobDto mapUnitHeadToJobDTO(UnitHead unitHead) {
+        JobDto dto = new JobDto();
+        dto.setCode(unitHead.getCode());
+        dto.setLocation(unitHead.getLocation());
+        dto.setName(unitHead.getName());
+        dto.setSector(unitHead.getSector());
+        dto.setTitle("unit Head");
+        return dto;
+   }
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }

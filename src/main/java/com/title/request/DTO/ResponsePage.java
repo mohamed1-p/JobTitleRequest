@@ -2,9 +2,13 @@ package com.title.request.DTO;
 
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class ResponsePage<T> {
 
 	private List<T> content;
@@ -14,4 +18,6 @@ public class ResponsePage<T> {
 	private int totalpages;
 	private boolean Last;
 	
+	
+
 }
